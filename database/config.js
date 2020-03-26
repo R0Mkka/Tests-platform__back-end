@@ -1,6 +1,6 @@
-var ENVIRONMENT = process.env;
+const ENVIRONMENT = process.env;
 
-var databaseConfig = {
+const databaseConfig = {
   host: ENVIRONMENT.DB_HOST,
   user: ENVIRONMENT.DB_USER,
   password: ENVIRONMENT.DB_PASSWORD,

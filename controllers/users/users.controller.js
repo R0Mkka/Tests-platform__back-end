@@ -1,9 +1,12 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-var usersService = require('../../services/users/users.service');
+const usersService = require('../../services/users/users.service');
 
-router.get('/', usersService.getUsers);
-router.post('/', usersService.addUser);
+router.get('/', usersService.getUsers.bind(usersService));
+router.get('/:id', usersService.getUserById.bind(usersService));
+router.post('/', usersService.addUser.bind(usersService));
+router.put('/:id', usersService.editUser.bind(usersService));
+router.delete('/:id', usersService.deleteUser.bind(usersService));
 
 module.exports = router;

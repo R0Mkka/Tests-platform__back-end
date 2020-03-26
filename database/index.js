@@ -1,7 +1,7 @@
-var mysql = require('mysql2');
-var databaseConfig = require('./config');
+const mysql = require('mysql2');
+const databaseConfig = require('./config');
 
-var databasePool = null;
+let databasePool = null;
 
 function makePool() {
   return mysql.createPool(databaseConfig);
