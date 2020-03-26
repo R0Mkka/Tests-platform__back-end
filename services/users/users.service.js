@@ -1,79 +1,109 @@
 const bcrypt = require('bcrypt');
+const passport = require('passport');
 const getDatabase = require('../../database');
 const database = getDatabase();
+
+const CustomError = require('../../helpers/custom-error');
+const SqlError = require('../../helpers/sql-error');
 
 const usersQueries = require('./users-queries');
 
 class UsersService {
-  getUsers(req, res, next) {
-    database.query(
-      usersQueries.getUsers,
-      (err, results) => {
-        if (err) {
-          return res.status(400).send(err);
-        }
-  
-        return res.status(200).send(results);
-      });
-  }
-
-  getUserById(req, res, next) {
-    database.query(
-      usersQueries.getUserById,
-      [req.params.id],
-      (err, users) => {
-        const user = users[0];
-
-        if (err) {
-          return res.status(400).send(err);
-        }
-
-        if (!user) {
-          return res.status(404).send({
-            status: 404,
-            message: 'User not found',
-          });
-        }
-
-        return res.status(200).send(user);
-      }
-    );
-  }
-
-  async addUser(req, res, next) {
-    const queryParams = await this.formatUserDataFromBody(req.body);
-
-    database.query(
-      usersQueries.addUser,
-      queryParams,
-      (err, results) => {
-        if (err) {
-          if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(400).send({
-              status: 400,
-              message: 'User with such email already exists',
-            });
+  getUsers() {
+    return new Promise((resolve, reject) => {
+      database.query(
+        usersQueries.getUsers,
+        (err, users) => {
+          if (err) {
+            return reject(new SqlError(err))
           }
 
-          return res.status(400).send(err);
-        }
-
-        return res.status(201).send({
-          newUserId: results.insertId,
+          users = users.map(user => this.getSecureUserData(user));
+    
+          resolve(users);
         });
-      },
-    );
+    });
   }
 
-  editUser(req, res, next) {
-    res.status(201).send(req.body);
+  getUserById(userId) {
+    return new Promise((resolve, reject) => {
+      database.query(
+        usersQueries.getUserById,
+        [userId],
+        (err, users) => {  
+          if (err) {
+            return reject(new SqlError(err));
+          }
+
+          const user = users[0];
+  
+          if (!user) {
+            return reject(new CustomError(404, 'User not found'));
+          }
+  
+          resolve(this.getSecureUserData(user));
+        }
+      );
+    });
   }
 
-  deleteUser(req, res, next) {
-    res.status(201).send(req.body);
+  getUserByEmail(userEmail, withPassword = false) {
+    return new Promise((resolve, reject) => {
+      database.query(
+        usersQueries.getUserByEmail,
+        [userEmail],
+        (err, users) => {  
+          if (err) {
+            return reject(new SqlError(err));
+          }
+
+          const user = users[0];
+  
+          if (!user) {
+            return reject(new CustomError(404, 'User not found'));
+          }
+  
+          if (withPassword) {
+            return resolve(user);
+          }
+
+          resolve(this.getSecureUserData(user));
+        }
+      );
+    });
   }
 
-  async formatUserDataFromBody({ firstName, lastName, roleId, email, password }) {
+  getSecureUserData(userData) {
+    const { password, ...otherData } = userData;
+
+    return otherData;
+  }
+
+  async addUser(userData) {
+    const queryParams = await this.formatUserData(userData);
+
+    return new Promise((resolve, reject) => {
+      database.query(
+        usersQueries.addUser,
+        queryParams,
+        (err, sqlResponse) => {
+          if (err) {
+            if (err.code === 'ER_DUP_ENTRY') {
+              return reject(new CustomError(400, 'User with such email already exists'));
+            }
+  
+            return reject(new SqlError(err));
+          }
+  
+          resolve({
+            newUserId: sqlResponse.insertId,
+          });
+        },
+      );
+    });
+  }
+
+  async formatUserData({ firstName, lastName, roleId, email, password }) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     return [

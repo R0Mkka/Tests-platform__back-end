@@ -15,6 +15,15 @@ const usersQueries = {
       userId = ?;
   `,
 
+  getUserByEmail: `
+    SELECT
+      *
+    FROM
+      users
+    WHERE
+      email = ?;
+  `,
+
   addUser: `
     INSERT INTO users (
       firstName,
