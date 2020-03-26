@@ -3,16 +3,18 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const cors = require('cors');
 
 const applyControllers = require('./controllers');
 const PORT = process.env.PORT;
 
 const app = express();
 
-app.use(cors());
+app.use(morgan('combined'));
 app.use(bodyParser.json());
+app.use(cors());
 
 applyControllers(app);
 
