@@ -28,7 +28,7 @@ const usersQueries = {
     INSERT INTO users (
       firstName,
       lastName,
-      roleId,
+      userRoleId,
       email,
       password
     )

@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 class AuthService {
-  generateJwt({ userId, firstName, lastName, email, roleId, status }) {
+  generateJwt({ userId, firstName, lastName, email, userRoleId, status }) {
     const expiry = new Date();
   
     expiry.setDate(expiry.getDate() + 7);
@@ -11,7 +11,7 @@ class AuthService {
       firstName,
       lastName,
       email,
-      roleId,
+      userRoleId,
       status,
       exp: parseInt(expiry.getTime() / 1000),
     }, process.env.SECRET_KEY);

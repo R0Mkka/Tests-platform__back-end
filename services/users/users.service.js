@@ -1,5 +1,4 @@
 const bcrypt = require('bcrypt');
-const passport = require('passport');
 const getDatabase = require('../../database');
 const database = getDatabase();
 
@@ -103,13 +102,13 @@ class UsersService {
     });
   }
 
-  async formatUserData({ firstName, lastName, roleId, email, password }) {
+  async formatUserData({ firstName, lastName, userRoleId, email, password }) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     return [
       firstName,
       lastName,
-      roleId,
+      userRoleId,
       email,
       hashedPassword,
     ];
